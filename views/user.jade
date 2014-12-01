@@ -2,9 +2,12 @@ extends test-layout
 
 block test-content
 	h1 user
-	h3 [create]
-	form(action='./create',method='post')
-		| name
-	h3 [retrive]
-	h3 [update]
-	h3 [delete]
+	ul
+		li
+			a(href='user/create') create
+		li
+			a(href='user/update') update
+		li
+			a(href='user/retrive') retrive
+		li
+			a(href='user/delete') delete

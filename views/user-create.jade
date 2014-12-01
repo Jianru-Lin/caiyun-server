@@ -1,0 +1,18 @@
+extends test-layout
+
+block test-content
+	h1 user
+
+	.panel.panel-primary
+		.panel-heading
+			.panel-title create
+		.panel-body
+			form(action='user/create',method='post')
+				form
+					.form-group
+						label Email
+						input.form-control(type='email',name='email')
+					.form-group
+						label Password
+						input.form-control(type='text',name='password')
+					button.btn.btn-default(type='submit') Create
