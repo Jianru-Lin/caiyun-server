@@ -1,0 +1,10 @@
+extends test-layout
+
+block test-content
+	h1 user
+	h3 [create]
+	form(action='./create',method='post')
+		| name
+	h3 [retrive]
+	h3 [update]
+	h3 [delete]
