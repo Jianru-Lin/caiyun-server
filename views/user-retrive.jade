@@ -7,7 +7,7 @@ block test-content
 		.panel-heading
 			.panel-title retrive
 		.panel-body
-			form(action='user/retrive',method='post')
+			form(action='retrive',method='post')
 				form
 					button.btn.btn-default(type='submit') Retrive All
 
@@ -17,5 +17,14 @@ block test-content
 		.panel-body
 			ul
 				each user in users
-					li= user._id
+					li
+						strong _id:
+						span= user._id
+						br
+						strong email:
+						span= user.email
+						br
+						strong password:
+						span= user.password
+						br
 	
