@@ -15,57 +15,81 @@ function vstr(v) {
 }
 
 function connectDb(cb) {
-	console.log('[connectDb] start')
+	log('[connectDb] start')
 	MongoClient.connect(dbUrl, function(err, db) {
 		if (err) {
-			console.log('[connectDb] error: ' + vstr(err))
+			log('[connectDb] error: ' + vstr(err))
 		}
 		else {
-			console.log('[connectDb] success')
+			log('[connectDb] success')
 		}
-		console.log('[connectDb] end')
+		log('[connectDb] end')
 		if (cb) cb(err, db)
 	})
 }
 
 function insertDb(db, collectionName, item, cb) {
-	console.log('[insertDb] start')
-	console.log('[insertDb] collectionName=' + vstr(collectionName))
-	console.log('[insertDb] item=' + vstr(item))
+	log('[insertDb] start')
+	log('[insertDb] collectionName=' + vstr(collectionName))
+	log('[insertDb] item=' + vstr(item))
 	db.collection(collectionName).insert(item, function(err, result) {
 		if (err) {
-			console.log('[insertDb] error:', vstr(err))
+			log('[insertDb] error:', vstr(err))
 		}
 		else {
-			console.log('[insertDb] success')
+			log('[insertDb] success')
 		}
-		console.log('[insertDb] end')
+		log('[insertDb] end')
 		if (cb) cb(err, result)
 	})
 }
 
-function closeDb(db) {
-	console.log('[closeDb] start')
-	db.close()
-	console.log('[closeDb] end')
+function retriveDb(db, collectionName, criteria, projection) {
+	log('[retriveDb] start')
+	log('[retriveDb] collectionName=' + collectionName)
+	log('[retriveDb] criteria=' + criteria)
+	log('[retriveDb] projection=' + projection)
+
+	try {
+		var cursor = db.collection(collectionName).find(criteria, projection)
+		return cursor
+	} catch(ex) {
+		log('[retriveDb] exception: ' + ex.toString())
+		throw ex
+	} finally {
+		log('[retriveDb] end')		
+	}
 }
 
-exports.createUser = function (user, cb) {
+function closeDb(db) {
+	log('[closeDb] start')
+	db.close()
+	log('[closeDb] end')
+}
+
+// # cb(err, id)
+exports.createUser = function(user, cb) {
 	
-	console.log('[createUser] start')
-	console.log('[createUser] user=' + vstr(user))
+	log('[createUser] start')
+	log('[createUser] user=' + vstr(user))
 	user = safeCopy(user)
 
 	connectDb(function(err, db) {
+		if (err) {
+			log('[createUser] end')
+			if (cb) cb(err, undefined)
+			return
+		}
+
 		insertDb(db, 'user', user, function(err, result) {
 			closeDb(db)
 			if (err) {
-				console.log('[createUser] error:', err)
+				log('[createUser] error:', err)
 			}
 			else {
-				console.log('[createUser] success, id:', result.ops[0]._id)
+				log('[createUser] success, id:', result.ops[0]._id)
 			}
-			console.log('[createUser] end')
+			log('[createUser] end')
 			if (cb) cb(err, err ? undefined : result.ops[0]._id)
 		})
 	})
@@ -74,6 +98,32 @@ exports.createUser = function (user, cb) {
 		// todo
 		return user
 	}
+}
+
+// # cb(err, userList)
+exports.retriveUser = function(cb) {
+
+	cb = cb || _cb
+
+	log('[retriveUser] start')
+
+	connectDb(function(err, db) {
+		if (err) {
+			log('[retriveUser] end')
+			cb(err, undefined)
+			return
+		}
+
+
+	})
+}
+
+function log() {
+	return console.log.apply(console, arguments)
+}
+
+function _cb() {
+
 }
 
 exports.createUser({}, function(err, id) {
