@@ -90,7 +90,6 @@ function insertDb(db, collectionName, item, cb) {
 	}
 }
 
-
 function insertDbOnce(collectionName, item, cb) {
 
 	connectDb(condition(connectDbSuccess, cb))
@@ -227,6 +226,6 @@ exports.retriveUser = function retriveUser(cb) {
 	}
 }
 
-exports.createUser({})
+//exports.createUser({})
 
 //exports.retriveUser()

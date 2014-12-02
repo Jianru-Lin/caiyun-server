@@ -1,3 +1,4 @@
+var db = require('./lib/db')
 var express = require('express');
 var router = express.Router();
 
@@ -10,7 +11,14 @@ router.get('/create', function(req, res) {
 });
 
 router.get('/retrive', function(req, res) {
-	res.render('user-retrive');
+	db.retriveUser(function(err, users) {
+		if (err) {
+			res.end(err.toString())
+		}
+		else {
+			res.render('user-retrive', {users: users})
+		}
+	})
 });
 
 router.get('/update', function(req, res) {

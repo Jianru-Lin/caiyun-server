@@ -5,50 +5,17 @@ block test-content
 
 	.panel.panel-primary
 		.panel-heading
-			.panel-title create
-		.panel-body
-			form(action='user/create',method='post')
-				form
-					.form-group
-						label Email
-						input.form-control(type='email',name='email')
-					.form-group
-						label Password
-						input.form-control(type='text',name='password')
-					button.btn.btn-default(type='submit') Create
-
-	.panel.panel-primary
-		.panel-heading
 			.panel-title retrive
 		.panel-body
 			form(action='user/retrive',method='post')
 				form
-					button.btn.btn-default(type='submit') Create
+					button.btn.btn-default(type='submit') Retrive All
 
-	.panel.panel-primary
+	.panel.panel-default
 		.panel-heading
-			.panel-title update
+			.panel-title output
 		.panel-body
-			form(action='user/update',method='post')
-				form
-					.form-group
-						label Email
-						input.form-control(type='email',name='email')
-					.form-group
-						label Password
-						input.form-control(type='text',name='password')
-					button.btn.btn-default(type='submit') Create
-
-	.panel.panel-primary
-		.panel-heading
-			.panel-title delete
-		.panel-body
-			form(action='user/delete',method='post')
-				form
-					.form-group
-						label Email
-						input.form-control(type='email',name='email')
-					.form-group
-						label Password
-						input.form-control(type='text',name='password')
-					button.btn.btn-default(type='submit') Create
+			ul
+				each user in users
+					li= user._id
+	
