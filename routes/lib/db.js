@@ -326,4 +326,4 @@ exports.deleteUser = function deleteUser(_id, cb) {
 
 //deleteDbOnce('user', {_id: new mongodb.ObjectID('547d5e784d2ee4c4067db9cc')})
 
-exports.deleteUser('547d5e784d2ee4c4067db9cc')
+//exports.deleteUser('547d5e784d2ee4c4067db9cc')
