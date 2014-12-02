@@ -3,41 +3,119 @@ var assert = require('assert')
 
 var dbUrl = 'mongodb://localhost:27017/caiyun'
 
+// empty function
+function _cb() {
+
+}
+
+// scb -> success callback
+// fcb -> failure callback
+// acb -> always callback
+function condition(scb, fcb, acb) {
+	scb = scb || _cb
+	fcb = fcb || _cb
+	acb = acb || _cb
+
+	return proxy
+
+	function proxy(err) {
+		try {
+			if (err) {
+				fcb.apply(this, arguments)
+			}
+			else {
+				scb.apply(this, arguments)
+			}
+		} finally {
+			acb.apply(this, arguments)
+		}
+	}
+}
+
+// shortcut for console.log()
+function log() {
+	return console.log.apply(console, arguments)
+}
+
+// p(func, ...)
+function p() {
+	var args = [].slice.apply(arguments)
+	if (args.length > 0) {
+		args[0] = '[' + args[0].name + ']'
+	}
+	log.apply(this, args)
+}
+
 // # cb(err, db)
 function connectDb(cb) {
 	cb = cb || _cb
+
 	log('[connectDb] start')
-	MongoClient.connect(dbUrl, condition(
-		// success
-		function(err, db) {
-			log('[connectDb] success')
-		},
-		// failure
-		function(err, db) {
-			log('[connectDb] error: ' + err)
-		},
-		// always
-		function(err, db) {
-			log('[connectDb] end')
-			cb(err, db)
-		})
-	)
+	MongoClient.connect(dbUrl, condition(connectSuccess, connectFailure, connectFinally))
+
+	function connectSuccess(err, db) {
+		log('[connectDb] success')
+	}
+
+	function connectFailure(err, db) {
+		log('[connectDb] failure, ' + err)
+	}
+
+	function connectFinally(err, db) {
+		log('[connectDb] end')
+		cb(err, db)
+	}
 }
 
 function insertDb(db, collectionName, item, cb) {
+	cb = cb || _cb
+
 	log('[insertDb] start')
 	log('[insertDb] collectionName=' + collectionName)
-	log('[insertDb] item=' + item)
-	db.collection(collectionName).insert(item, function(err, result) {
-		if (err) {
-			log('[insertDb] error:', err)
-		}
-		else {
-			log('[insertDb] success')
-		}
+	log('[insertDb] item=' + JSON.stringify(item))
+
+	db.collection(collectionName).insert(item, condition(insertSuccess, insertFailure, insertFinally))
+
+	function insertSuccess(err, result) {
+		log('[insertDb] success')
+	}
+
+	function insertFailure(err, result) {
+		log('[insertDb] failure, ', err)
+	}
+
+	function insertFinally(err, result) {
 		log('[insertDb] end')
-		if (cb) cb(err, result)
-	})
+		cb(err, result)
+	}
+}
+
+
+function insertDbOnce(collectionName, item, cb) {
+
+	connectDb(condition(connectDbSuccess, cb))
+
+	function connectDbSuccess(err, db) {
+
+		// we will insert the data to database
+		// and after that, we will invoke the callback no matter success or not
+		// then closeDb will be invoked
+
+		insertDb(db, collectionName, item, condition(insertDbSuccess, insertDbFailure, insertDbFinally))
+
+		function insertDbSuccess(err, result) {
+			// nothing to do
+		}
+
+		function insertDbFailure(err, result) {
+			// nothing to do
+		}
+
+		function insertDbFinally(err, result) {
+			cb(err, result)
+			closeDb(db)
+		}
+	}
 }
 
 function retriveDb(db, collectionName, criteria, projection) {
@@ -50,10 +128,10 @@ function retriveDb(db, collectionName, criteria, projection) {
 		var cursor = db.collection(collectionName).find(criteria || {}, projection || {})
 		return cursor
 	} catch(ex) {
-		log('[retriveDb] exception: ' + ex.toString())
+		log('[retriveDb] failure, ' + ex.toString())
 		throw ex
 	} finally {
-		log('[retriveDb] end')		
+		log('[retriveDb] end')
 	}
 }
 
@@ -68,34 +146,24 @@ exports.createUser = function createUser(user, cb) {
 	cb = cb || _cb
 	
 	log('[createUser] start')
-	log('[createUser] user=' + user)
+	log('[createUser] user=' + JSON.stringify(user))
 	user = safeCopy(user)
+	var id = undefined
 
-	connectDb(condition(connectDbSuccess, connectDbFailure))
+	insertDbOnce('user', user, condition(insertDbOnceSuccess, insertDbOnceFailure, insertDbOnceFinally))
 
-	function connectDbSuccess(err, db) {
-		var id = undefined
-		insertDb(db, 'user', user, condition(insertDbSuccess, insertDbFailure, insertDbFinally))
-
-		function insertDbSuccess(err, result) {
-			id = result.ops[0]._id
-			p(createUser, 'success, id=' + id)
-		}
-
-		function insertDbFailure(err, result) {
-			// nothing to do
-		}
-
-		function insertDbFinally(err, result) {
-			p(createUser, 'end')
-			closeDb(db)
-			cb(err, id)
-		}
+	function insertDbOnceSuccess(err, result) {
+		id = result.ops[0]._id
+		p(createUser, 'success, id=' + id)
 	}
 
-	function connectDbFailure(err, db) {
+	function insertDbOnceFailure(err, result) {
+		// nothing to do
+	}
+
+	function insertDbOnceFinally(err, result) {
 		p(createUser, 'end')
-		cb(err, undefined)
+		cb(err, id)
 	}
 
 	function safeCopy(user) {
@@ -157,48 +225,6 @@ exports.retriveUser = function retriveUser(cb) {
 			}
 		}
 	}
-}
-
-// scb -> success callback
-// fcb -> failure callback
-// acb -> always callback
-function condition(scb, fcb, acb) {
-	scb = scb || _cb
-	fcb = fcb || _cb
-	acb = acb || _cb
-
-	return proxy
-
-	function proxy(err) {
-		try {
-			if (err) {
-				log(err.toString())
-				fcb.apply(this, arguments)
-			}
-			else {
-				scb.apply(this, arguments)
-			}
-		} finally {
-			acb.apply(this, arguments)
-		}
-	}
-}
-
-// p(func, ...)
-function p() {
-	var args = [].slice.apply(arguments)
-	if (args.length > 0) {
-		args[0] = '[' + args[0].name + ']'
-	}
-	log.apply(this, args)
-}
-
-function log() {
-	return console.log.apply(console, arguments)
-}
-
-function _cb() {
-
 }
 
 exports.createUser({})
