@@ -10,6 +10,23 @@ router.get('/create', function(req, res) {
 	res.render('user-create');
 });
 
+router.post('/create', function(req, res) {
+	var user = check(req.body)
+	db.createUser(user, function(err, _id) {
+		if (err) {
+			res.end(err.toString())
+		}
+		else {
+			res.render('user-create', {_id: _id})
+		}
+	})
+
+	function check(user) {
+		// TODO
+		return user
+	}
+});
+
 router.get('/retrive', function(req, res) {
 	db.retriveUser(function(err, users) {
 		if (err) {

@@ -7,7 +7,7 @@ block test-content
 		.panel-heading
 			.panel-title create
 		.panel-body
-			form(action='user/create',method='post')
+			form(action='create',method='post')
 				form
 					.form-group
 						label Email
@@ -16,3 +16,9 @@ block test-content
 						label Password
 						input.form-control(type='text',name='password')
 					button.btn.btn-default(type='submit') Create
+
+	.panel.panel-default
+		.panel-heading
+			.panel-title output
+		.panel-body
+			p= _id
