@@ -1,4 +1,5 @@
-var MongoClient = require('mongodb').MongoClient
+var mongodb = require('mongodb')
+var MongoClient = mongodb.MongoClient
 var assert = require('assert')
 
 var dbUrl = 'mongodb://localhost:27017/caiyun'
@@ -91,6 +92,7 @@ function insertDb(db, collectionName, item, cb) {
 }
 
 function insertDbOnce(collectionName, item, cb) {
+	cb = cb || _cb
 
 	connectDb(condition(connectDbSuccess, cb))
 
@@ -126,11 +128,72 @@ function retriveDb(db, collectionName, criteria, projection) {
 	try {
 		var cursor = db.collection(collectionName).find(criteria || {}, projection || {})
 		return cursor
-	} catch(ex) {
+	} 
+	catch(ex) {
 		log('[retriveDb] failure, ' + ex.toString())
 		throw ex
-	} finally {
+	} 
+	finally {
 		log('[retriveDb] end')
+	}
+}
+
+// # cb(err, result)
+function deleteDb(db, collectionName, criteria, cb) {
+	cb = cb || _cb
+
+	log('[deleteDb] start')
+	log('[deleteDb] collectionName=' + collectionName)
+	log('[deleteDb] criteria=' + JSON.stringify(criteria))
+
+	try {
+		db.collection(collectionName).remove(criteria, condition(removeSuccess, removeFailure, removeFinally))
+	}
+	catch(ex) {
+		log('[deleteDb] failure, ' + ex.toString())
+		log('[deleteDb] end')
+		throw ex
+	}
+
+	function removeSuccess(err, detail) {
+		log('[deleteDb] success, ' + JSON.stringify(detail.result))
+	}
+
+	function removeFailure(err, detail) {
+		log('[deleteDb] failure, ' + err)
+	}
+
+	function removeFinally(err, detail) {
+		log('[deleteDb] end')
+		cb(err, detail.result)
+	}
+}
+
+function deleteDbOnce(collectionName, criteria, cb) {
+	cb = cb || _cb
+
+	connectDb(condition(connectDbSuccess, cb))
+
+	function connectDbSuccess(err, db) {
+
+		// we will delete the data in the database
+		// and after that, we will invoke the callback no matter success or not
+		// then closeDb will be invoked
+
+		deleteDb(db, collectionName, criteria, condition(deleteDbSuccess, deleteDbFailure, deleteDbFinally))
+
+		function deleteDbSuccess(err, result) {
+			// nothing to do
+		}
+
+		function deleteDbFailure(err, result) {
+			// nothing to do
+		}
+
+		function deleteDbFinally(err, result) {
+			cb(err, result)
+			closeDb(db)
+		}
 	}
 }
 
@@ -226,6 +289,41 @@ exports.retriveUser = function retriveUser(cb) {
 	}
 }
 
+// # cb(err, count)
+exports.deleteUser = function deleteUser(_id, cb) {
+	cb = cb || _cb
+
+	log('[deleteUser] start')
+	log('[deleteUser] _id=' + _id)
+	_id = check(_id)
+	var count = undefined
+
+	deleteDbOnce('user', {_id: new mongodb.ObjectID(_id)}, condition(deleteDbOnceSuccess, deleteDbOnceFailure, deleteDbOnceFinally))
+
+	function deleteDbOnceSuccess(err, result) {
+		count = parseInt(result.n) > 0 ? result.n : 0
+		log('[deleteUser] success, count=' + count)
+	}
+
+	function deleteDbOnceFailure(err, result) {
+		// nothing to do
+	}
+
+	function deleteDbOnceFinally(err, result) {
+		log('[deleteUser] end')
+		cb(err, count)
+	}
+
+	function check(_id) {
+		// TODO
+		return _id
+	}
+}
+
 //exports.createUser({})
 
 //exports.retriveUser()
+
+//deleteDbOnce('user', {_id: new mongodb.ObjectID('547d5e784d2ee4c4067db9cc')})
+
+exports.deleteUser('547d5e784d2ee4c4067db9cc')

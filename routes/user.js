@@ -46,4 +46,22 @@ router.get('/delete', function(req, res) {
 	res.render('user-delete');
 });
 
+router.post('/delete', function(req, res) {
+	var _id = check(req.body._id)
+
+	db.deleteUser(_id, function(err, count) {
+		if (err) {
+			res.end(err.toString())
+		}
+		else {
+			res.render('user-delete', {count: count})
+		}
+	})
+
+	function check(_id) {
+		// TODO
+		return _id
+	}
+})
+
 module.exports = router;
