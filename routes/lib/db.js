@@ -74,8 +74,12 @@ function dbOnce(action, args) {
 		}
 
 		function actionFinally(err, result) {
-			cb(err, result)
-			closeDb(db)
+			try {
+				cb(err, result)
+			}
+			finally {
+				closeDb(db)				
+			}
 		}
 	}
 }
@@ -128,7 +132,10 @@ function insertDbOnce(collectionName, item, cb) {
 	dbOnce(insertDb, [collectionName, item, cb])
 }
 
-function retriveDb(db, collectionName, criteria, projection) {
+// # cb(err, cursor)
+function retriveDb(db, collectionName, criteria, projection, cb) {
+	cb = cb || _cb
+
 	log('[retriveDb] start')
 	log('[retriveDb] collectionName=' + collectionName)
 	log('[retriveDb] criteria=' + criteria)
@@ -136,14 +143,71 @@ function retriveDb(db, collectionName, criteria, projection) {
 
 	try {
 		var cursor = db.collection(collectionName).find(criteria || {}, projection || {})
-		return cursor
+		setTimeout(function() {
+			log('[retriveDb] end')
+			cb(undefined, cursor)
+		}, 0)
 	} 
 	catch (ex) {
 		log('[retriveDb] failure, ' + ex.toString())
 		throw ex
-	} 
-	finally {
-		log('[retriveDb] end')
+	}
+}
+
+function retriveDbList(db, collectionName, criteria, projection, cb) {
+	cb = cb || _cb
+
+	log('[retriveDbList] start')
+
+	retriveDb(db, collectionName, criteria, projection, condition(retriveDbSuccess, retriveDbFailure))
+
+	function retriveDbSuccess(err, cursor) {
+		cursor.toArray(condition(toArraySuccess, toArrayFailure, toArrayFinally))
+
+		function toArraySuccess(err, list) {
+			log('[retriveDbList] list=' + jsonstr(list))
+		}
+
+		function toArrayFailure(err, list) {
+			log('[retriveDbList] failure, ' + err.toString())
+		}
+
+		function toArrayFinally(err, list) {
+			log('[retriveDbList] end')
+			cb(err, list)
+		}
+	}
+
+	function retriveDbFailure(err, cursor) {
+		log('[retriveDbList] end')
+		cb(err, cursor)
+	}
+}
+
+function retriveDbListOnce(collectionName, criteria, projection, cb) {
+	cb = cb || _cb
+
+	connectDb(condition(connectDbSuccess, cb))
+
+	function connectDbSuccess(err, db) {
+		retriveDbList(db, collectionName, criteria, projection, condition(retriveDbListSuccess, retriveDbListFailure, retriveDbFinally))
+
+		function retriveDbListSuccess(err, list) {
+			// nothing to do
+		}
+
+		function retriveDbListFailure(err, list) {
+			// nothing to do
+		}
+
+		function retriveDbFinally(err, list) {
+			try {
+				cb(err, list)
+			}
+			finally {
+				closeDb(db)
+			}
+		}
 	}
 }
 
@@ -262,36 +326,20 @@ exports.retriveUser = function retriveUser(cb) {
 
 	log('[retriveUser] start')
 
-	connectDb(function(err, db) {
-		if (err) {
-			log('[retriveUser] end')
-			cb(err, undefined)
-			return
-		}
+	retriveDbListOnce('user', undefined, undefined, condition(retriveDbListOnceSuccess, retriveDbListOnceFailure, retriveDbListOnceFinally))
 
-		try {
-			retriveDb(db, 'user').toArray(function(err, list) {
+	function retriveDbListOnceSuccess(err, list) {
+		// nothing to do
+	}
 
-				if (err) {
-					log('[retriveUser] end')
-					closeDb(db)
-					cb(err, undefined)
-					return
-				}
+	function retriveDbListOnceFailure(err, list) {
+		// nothing to do
+	}
 
-				log('[retriveUser] list=' + jsonstr(list))
-				closeDb(db)
-				log('[retriveUser] end')
-				cb(undefined, list)
-			})
-		}
-		catch (ex) {
-			log('[retriveUser] end')
-			closeDb(db)
-			return
-		}
+	function retriveDbListOnceFinally(err, list) {
+		cb(err, list)
+	}
 
-	})
 }
 
 // # cb(err, count)
