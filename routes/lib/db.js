@@ -9,6 +9,10 @@ function _cb() {
 
 }
 
+function jsonstr(v) {
+	return JSON.stringify(v)
+}
+
 // scb -> success callback
 // fcb -> failure callback
 // acb -> always callback
@@ -73,7 +77,7 @@ function insertDb(db, collectionName, item, cb) {
 
 	log('[insertDb] start')
 	log('[insertDb] collectionName=' + collectionName)
-	log('[insertDb] item=' + JSON.stringify(item))
+	log('[insertDb] item=' + jsonstr(item))
 
 	db.collection(collectionName).insert(item, condition(insertSuccess, insertFailure, insertFinally))
 
@@ -129,12 +133,72 @@ function retriveDb(db, collectionName, criteria, projection) {
 		var cursor = db.collection(collectionName).find(criteria || {}, projection || {})
 		return cursor
 	} 
-	catch(ex) {
+	catch (ex) {
 		log('[retriveDb] failure, ' + ex.toString())
 		throw ex
 	} 
 	finally {
 		log('[retriveDb] end')
+	}
+}
+
+function updateDb(db, collectionName, criteria, item, options, cb) {
+	cb = cb || _cb
+
+	log('[updateDb] start')
+	log('[updateDb] collectionName=' + jsonstr(collectionName))
+	log('[updateDb] criteria=' + jsonstr(criteria))
+	log('[updateDb] item=' + jsonstr(item))
+	log('[updateDb] options=' + jsonstr(options))
+
+	try {
+		db.collection(collectionName).update(criteria, item, options, condition(updateSuccess, updateFailure, updateFinally))
+	}
+	catch (ex) {
+		log('[updateDb] failure, ' + ex.toString())
+		log('[updateDb] end')
+		throw ex
+	}
+
+	function updateSuccess(err, detail) {
+		log('[updateDb] success, ' + jsonstr(detail.result))
+	}
+
+	function updateFailure(err, detail) {
+		log('[updateDb] failure, ' + err.toString())
+	}
+
+	function updateFinally(err, detail) {
+		log('[updateDb] end')
+		cb(err, detail.result)
+	}
+}
+
+function updateDbOnce(collectionName, criteria, item, options, cb) {
+	cb = cb || _cb
+
+	connectDb(condition(connectDbSuccess, cb))
+
+	function connectDbSuccess(err, db) {
+
+		// we will update the data in the database
+		// and after that, we will invoke the callback no matter success or not
+		// then closeDb will be invoked
+
+		updateDb(db, collectionName, criteria, item, options, condition(updateDbSuccess, updateDbFailure, updateDbFinally))
+
+		function updateDbSuccess(err, result) {
+			// nothing to do
+		}
+
+		function updateDbFailure(err, result) {
+			// nothing to do
+		}
+
+		function updateDbFinally(err, result) {
+			cb(err, result)
+			closeDb(db)
+		}
 	}
 }
 
@@ -144,7 +208,7 @@ function deleteDb(db, collectionName, criteria, cb) {
 
 	log('[deleteDb] start')
 	log('[deleteDb] collectionName=' + collectionName)
-	log('[deleteDb] criteria=' + JSON.stringify(criteria))
+	log('[deleteDb] criteria=' + jsonstr(criteria))
 
 	try {
 		db.collection(collectionName).remove(criteria, condition(removeSuccess, removeFailure, removeFinally))
@@ -156,7 +220,7 @@ function deleteDb(db, collectionName, criteria, cb) {
 	}
 
 	function removeSuccess(err, detail) {
-		log('[deleteDb] success, ' + JSON.stringify(detail.result))
+		log('[deleteDb] success, ' + jsonstr(detail.result))
 	}
 
 	function removeFailure(err, detail) {
@@ -208,7 +272,7 @@ exports.createUser = function createUser(user, cb) {
 	cb = cb || _cb
 	
 	log('[createUser] start')
-	log('[createUser] user=' + JSON.stringify(user))
+	log('[createUser] user=' + jsonstr(user))
 	user = safeCopy(user)
 	var id = undefined
 
@@ -258,7 +322,7 @@ exports.retriveUser = function retriveUser(cb) {
 					return
 				}
 
-				p(retriveUser, 'list=' + JSON.stringify(list))
+				p(retriveUser, 'list=' + jsonstr(list))
 				closeDb(db)
 				p(retriveUser, 'end')
 				cb(undefined, list)
@@ -327,3 +391,5 @@ exports.deleteUser = function deleteUser(_id, cb) {
 //deleteDbOnce('user', {_id: new mongodb.ObjectID('547d5e784d2ee4c4067db9cc')})
 
 //exports.deleteUser('547d5e784d2ee4c4067db9cc')
+
+//updateDbOnce('user', {_id: new mongodb.ObjectID('547c779e1ebb30f4149beb4f')}, {$set: {email: 'jianru.lin@gmail.com'}})
