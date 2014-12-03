@@ -42,15 +42,6 @@ function log() {
 	return console.log.apply(console, arguments)
 }
 
-// p(func, ...)
-function p() {
-	var args = [].slice.apply(arguments)
-	if (args.length > 0) {
-		args[0] = '[' + args[0].name + ']'
-	}
-	log.apply(this, args)
-}
-
 // # cb(err, db)
 function connectDb(cb) {
 	cb = cb || _cb
@@ -280,7 +271,7 @@ exports.createUser = function createUser(user, cb) {
 
 	function insertDbOnceSuccess(err, result) {
 		id = result.ops[0]._id
-		p(createUser, 'success, id=' + id)
+		log('[createUser] success, id=' + id)
 	}
 
 	function insertDbOnceFailure(err, result) {
@@ -288,7 +279,7 @@ exports.createUser = function createUser(user, cb) {
 	}
 
 	function insertDbOnceFinally(err, result) {
-		p(createUser, 'end')
+		log('[createUser] end')
 		cb(err, id)
 	}
 
@@ -303,11 +294,11 @@ exports.retriveUser = function retriveUser(cb) {
 
 	cb = cb || _cb
 
-	p(retriveUser, 'start')
+	log('[retriveUser] start')
 
 	connectDb(function(err, db) {
 		if (err) {
-			p(retriveUser, 'end')
+			log('[retriveUser] end')
 			cb(err, undefined)
 			return
 		}
@@ -316,20 +307,20 @@ exports.retriveUser = function retriveUser(cb) {
 			retriveDb(db, 'user').toArray(function(err, list) {
 
 				if (err) {
-					p(retriveUser, 'end')
+					log('[retriveUser] end')
 					closeDb(db)
 					cb(err, undefined)
 					return
 				}
 
-				p(retriveUser, 'list=' + jsonstr(list))
+				log('[retriveUser] list=' + jsonstr(list))
 				closeDb(db)
-				p(retriveUser, 'end')
+				log('[retriveUser] end')
 				cb(undefined, list)
 			})
 		}
 		catch (ex) {
-			p(retriveUser, 'end')
+			log('[retriveUser] end')
 			closeDb(db)
 			return
 		}
@@ -343,7 +334,7 @@ exports.retriveUser = function retriveUser(cb) {
 		function errorHandler(err) {
 			if (err) {
 				closeDb()
-				p(retriveUser, 'end')
+				log('[retriveUser] end')
 				cb(err, undefined)
 			}
 			else {
