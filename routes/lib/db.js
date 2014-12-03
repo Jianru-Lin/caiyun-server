@@ -42,6 +42,44 @@ function log() {
 	return console.log.apply(console, arguments)
 }
 
+// args[args.length - 1] must be the 'cb'
+// it can be undefiend or null but can not be omit
+function dbOnce(action, args) {
+	assert(typeof action === 'function')
+	assert(Array.isArray(args))
+	assert(args.length > 0)
+
+	cb = args[args.length - 1] || _cb
+
+	connectDb(condition(connectDbSuccess, cb))
+
+	function connectDbSuccess(err, db) {
+
+		// after the action executed, we will invoke the callback no matter success or not
+		// then closeDb will be invoked
+
+		// prepend 'db' as the first argument
+		args.unshift(db)
+
+		// replace the 'callback' with our own one
+		args[args.length - 1] = condition(actionSuccess, actionFailure, actionFinally)
+		action.apply(this, args)
+
+		function actionSuccess(err, result) {
+			// nothing to do
+		}
+
+		function actionFailure(err, result) {
+			// nothing to do
+		}
+
+		function actionFinally(err, result) {
+			cb(err, result)
+			closeDb(db)
+		}
+	}
+}
+
 // # cb(err, db)
 function connectDb(cb) {
 	cb = cb || _cb
@@ -87,31 +125,7 @@ function insertDb(db, collectionName, item, cb) {
 }
 
 function insertDbOnce(collectionName, item, cb) {
-	cb = cb || _cb
-
-	connectDb(condition(connectDbSuccess, cb))
-
-	function connectDbSuccess(err, db) {
-
-		// we will insert the data to database
-		// and after that, we will invoke the callback no matter success or not
-		// then closeDb will be invoked
-
-		insertDb(db, collectionName, item, condition(insertDbSuccess, insertDbFailure, insertDbFinally))
-
-		function insertDbSuccess(err, result) {
-			// nothing to do
-		}
-
-		function insertDbFailure(err, result) {
-			// nothing to do
-		}
-
-		function insertDbFinally(err, result) {
-			cb(err, result)
-			closeDb(db)
-		}
-	}
+	dbOnce(insertDb, [collectionName, item, cb])
 }
 
 function retriveDb(db, collectionName, criteria, projection) {
@@ -166,31 +180,7 @@ function updateDb(db, collectionName, criteria, item, options, cb) {
 }
 
 function updateDbOnce(collectionName, criteria, item, options, cb) {
-	cb = cb || _cb
-
-	connectDb(condition(connectDbSuccess, cb))
-
-	function connectDbSuccess(err, db) {
-
-		// we will update the data in the database
-		// and after that, we will invoke the callback no matter success or not
-		// then closeDb will be invoked
-
-		updateDb(db, collectionName, criteria, item, options, condition(updateDbSuccess, updateDbFailure, updateDbFinally))
-
-		function updateDbSuccess(err, result) {
-			// nothing to do
-		}
-
-		function updateDbFailure(err, result) {
-			// nothing to do
-		}
-
-		function updateDbFinally(err, result) {
-			cb(err, result)
-			closeDb(db)
-		}
-	}
+	dbOnce(updateDb, [collectionName, criteria, item, options, cb])
 }
 
 // # cb(err, result)
@@ -225,31 +215,7 @@ function deleteDb(db, collectionName, criteria, cb) {
 }
 
 function deleteDbOnce(collectionName, criteria, cb) {
-	cb = cb || _cb
-
-	connectDb(condition(connectDbSuccess, cb))
-
-	function connectDbSuccess(err, db) {
-
-		// we will delete the data in the database
-		// and after that, we will invoke the callback no matter success or not
-		// then closeDb will be invoked
-
-		deleteDb(db, collectionName, criteria, condition(deleteDbSuccess, deleteDbFailure, deleteDbFinally))
-
-		function deleteDbSuccess(err, result) {
-			// nothing to do
-		}
-
-		function deleteDbFailure(err, result) {
-			// nothing to do
-		}
-
-		function deleteDbFinally(err, result) {
-			cb(err, result)
-			closeDb(db)
-		}
-	}
+	dbOnce(deleteDb, [collectionName, criteria, cb])
 }
 
 function closeDb(db) {
@@ -326,22 +292,6 @@ exports.retriveUser = function retriveUser(cb) {
 		}
 
 	})
-
-	function ifNoError(next) {
-		return errorHandler
-
-		// # errorHandler(err, ...)
-		function errorHandler(err) {
-			if (err) {
-				closeDb()
-				log('[retriveUser] end')
-				cb(err, undefined)
-			}
-			else {
-				next([].slice.apply(arguments, [1]))
-			}
-		}
-	}
 }
 
 // # cb(err, count)
