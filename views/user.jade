@@ -1,13 +1,14 @@
 extends test-layout
 
 block test-content
-	h1 user
-	ul
-		li
-			a(href='user/create') create
-		li
-			a(href='user/update') update
-		li
-			a(href='user/retrive') retrive
-		li
-			a(href='user/delete') delete
+	h1 User
+		span(style='font-size: .75em;')
+			| &nbsp;(&nbsp;
+			a(href='user/create') C
+			| &nbsp;|&nbsp;
+			a(href='user/update') R
+			| &nbsp;|&nbsp;
+			a(href='user/retrive') U
+			| &nbsp;|&nbsp;
+			a(href='user/delete') D
+			| &nbsp;)

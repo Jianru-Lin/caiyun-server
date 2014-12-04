@@ -1,30 +1,18 @@
 extends test-layout
 
 block test-content
-	h1 user
-
-	.panel.panel-primary
-		.panel-heading
-			.panel-title create
-		.panel-body
-			form(action='user/create',method='post')
-				form
-					.form-group
-						label Email
-						input.form-control(type='email',name='email')
-					.form-group
-						label Password
-						input.form-control(type='text',name='password')
-					button.btn.btn-default(type='submit') Create
-
-	.panel.panel-primary
-		.panel-heading
-			.panel-title retrive
-		.panel-body
-			form(action='user/retrive',method='post')
-				form
-					button.btn.btn-default(type='submit') Create
-
+	h1 User
+		span(style='font-size: .75em;')
+			| &nbsp;(&nbsp;
+			a(href='create') C
+			| &nbsp;|&nbsp;
+			a(href='retrive') R
+			| &nbsp;|&nbsp;
+			a(href='update') U
+			| &nbsp;|&nbsp;
+			a(href='delete') D
+			| &nbsp;)
+			
 	.panel.panel-primary
 		.panel-heading
 			.panel-title update
@@ -32,23 +20,12 @@ block test-content
 			form(action='user/update',method='post')
 				form
 					.form-group
-						label Email
-						input.form-control(type='email',name='email')
-					.form-group
-						label Password
-						input.form-control(type='text',name='password')
-					button.btn.btn-default(type='submit') Create
-
-	.panel.panel-primary
-		.panel-heading
-			.panel-title delete
-		.panel-body
-			form(action='user/delete',method='post')
-				form
+						label _id
+						input.form-control(type='text',name='_id')
 					.form-group
 						label Email
 						input.form-control(type='email',name='email')
 					.form-group
 						label Password
 						input.form-control(type='text',name='password')
-					button.btn.btn-default(type='submit') Create
+					button.btn.btn-default(type='submit') Update

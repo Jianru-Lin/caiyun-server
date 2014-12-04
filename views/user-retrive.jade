@@ -1,8 +1,18 @@
 extends test-layout
 
 block test-content
-	h1 user
-
+	h1 User
+		span(style='font-size: .75em;')
+			| &nbsp;(&nbsp;
+			a(href='create') C
+			| &nbsp;|&nbsp;
+			a(href='retrive') R
+			| &nbsp;|&nbsp;
+			a(href='update') U
+			| &nbsp;|&nbsp;
+			a(href='delete') D
+			| &nbsp;)
+			
 	.panel.panel-primary
 		.panel-heading
 			.panel-title retrive
