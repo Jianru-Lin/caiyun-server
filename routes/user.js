@@ -42,6 +42,26 @@ router.get('/update', function(req, res) {
 	res.render('user-update');
 });
 
+router.post('/update', function(req, res) {
+	var form = check(req.body)
+	var _id = form._id
+	var user = (delete form._id, form)
+
+	db.updateUser(_id, user, function(err, count) {
+		if (err) {
+			res.end(err.toString())
+		}
+		else {
+			res.render('user-update', {count: count})
+		}
+	})
+
+	function check(form) {
+		// TODO
+		return form
+	}
+})
+
 router.get('/delete', function(req, res) {
 	res.render('user-delete');
 });

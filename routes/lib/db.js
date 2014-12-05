@@ -373,6 +373,44 @@ exports.deleteUser = function deleteUser(_id, cb) {
 	}
 }
 
+// # cb(err, count)
+exports.updateUser = function updateUser(_id, user, cb) {
+	cb = cb || _cb
+	
+	log('[updateUser] start')
+	log('[updateUser] _id=' + _id)
+	log('[updateUser] user=' + jsonstr(user))
+
+	var count = undefined
+	_id = check(_id)
+	user = safeCopy(user)
+	updateDbOnce('user', {_id: new mongodb.ObjectID(_id)}, user, undefined, condition(updateDbOnceSuccess, updateDbOnceFailure, updateDbOnceFinally))
+
+	function updateDbOnceSuccess(err, result) {
+		count = parseInt(result.n) > 0 ? result.n : 0
+		log('[updateUser] success, count=' + count)
+	}
+
+	function updateDbOnceFailure(err, result) {
+		// nothing to do
+	}
+
+	function updateDbOnceFinally(err, result) {
+		log('[updateUser] end')
+		cb(err, count)
+	}
+
+	function check(_id) {
+		// TODO
+		return _id
+	}
+
+	function safeCopy(user) {
+		// TODO
+		return user
+	}
+}
+
 //exports.createUser({})
 
 //exports.retriveUser()

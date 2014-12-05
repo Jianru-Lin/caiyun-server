@@ -17,7 +17,7 @@ block test-content
 		.panel-heading
 			.panel-title update
 		.panel-body
-			form(action='user/update',method='post')
+			form(action='update',method='post')
 				form
 					.form-group
 						label _id
@@ -29,3 +29,9 @@ block test-content
 						label Password
 						input.form-control(type='text',name='password')
 					button.btn.btn-default(type='submit') Update
+
+	.panel.panel-default
+		.panel-heading
+			.panel-title output
+		.panel-body
+			p= count
