@@ -24,7 +24,7 @@ app.use(require('less-middleware')(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
-app.use('/user', user);
+app.use('/dev/user', user);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
