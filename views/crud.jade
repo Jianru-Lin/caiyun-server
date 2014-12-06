@@ -1,0 +1,32 @@
+extends test-layout
+
+block test-content
+	h1= target
+		span(style='font-size: .75em;')
+			| &nbsp;(&nbsp;
+			a(href='create') C
+			| &nbsp;|&nbsp;
+			a(href='retrive') R
+			| &nbsp;|&nbsp;
+			a(href='update') U
+			| &nbsp;|&nbsp;
+			a(href='delete') D
+			| &nbsp;)
+
+	.panel.panel-primary
+		.panel-heading
+			.panel-title= action
+		.panel-body
+			form(action=action,method='post')
+				form
+					each item in formDef
+						.form-group
+							label= item
+							input.form-control(type='text',name=item)
+					button.btn.btn-default(type='submit') Submit
+
+	.panel.panel-default
+		.panel-heading
+			.panel-title output
+		.panel-body
+			p= _id

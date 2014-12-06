@@ -410,13 +410,3 @@ exports.updateUser = function updateUser(_id, user, cb) {
 		return user
 	}
 }
-
-//exports.createUser({})
-
-//exports.retriveUser()
-
-//deleteDbOnce('user', {_id: new mongodb.ObjectID('547d5e784d2ee4c4067db9cc')})
-
-//exports.deleteUser('547d5e784d2ee4c4067db9cc')
-
-//updateDbOnce('user', {_id: new mongodb.ObjectID('547c779e1ebb30f4149beb4f')}, {$set: {email: 'jianru.lin@gmail.com'}})
