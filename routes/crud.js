@@ -6,7 +6,7 @@ var path = require('path')
 
 var router_pattern = /^\/([_a-zA-Z]+)\/(create|retrive|update|delete)/
 
-function loadFormDef(target, action) {
+function loadDef(target) {
 	var def
 
 	try {
@@ -21,27 +21,7 @@ function loadFormDef(target, action) {
 		return
 	}
 
-	var formDef
-
-	switch (action) {
-		case 'create':
-			formDef = def
-			break
-		case 'retrive':
-			formDef = []
-			break
-		case 'update':
-			formDef = def
-			formDef.unshift('_id')
-			break
-		case 'delete':
-			formDef = ['_id']
-			break
-		default:
-			throw new Error('stupid programmer')
-	}
-
-	return formDef
+	return def
 }
 
 router.get(router_pattern, function(req, res) {
@@ -51,7 +31,8 @@ router.get(router_pattern, function(req, res) {
 	res.render('crud', {
 		target: target,
 		action: action,
-		formDef: loadFormDef(target, action)
+		targetDef: loadDef(target),
+		result: {}
 	})
 });
 
@@ -59,83 +40,71 @@ router.post(router_pattern, function(req, res) {
 	var target = req.params[0]
 	var action = req.params[1]
 
-})
-
-router.get('/create', function(req, res) {
-	res.render('user-create');
-});
-
-router.post('/create', function(req, res) {
-	var user = check(req.body)
-	db.createUser(user, function(err, _id) {
-		if (err) {
-			res.end(err.toString())
-		}
-		else {
-			res.render('user-create', {_id: _id})
-		}
-	})
-
-	function check(user) {
-		// TODO
-		return user
+	switch (action) {
+		case 'create':
+			db.create(target, req.body, createCb)
+			break
+		case 'retrive':
+			db.retrive(target, retriveCb)
+			break
+		case 'update':
+			var _id = req.body._id
+			var item = ((delete req.body._id), req.body)
+			db.update(target, _id, item, updateCb)
+			break
+		case 'delete':
+			db.delete_(target, req.body._id, deleteCb)
+			break
+		default:
+			throw new Error('stupid programmer')
 	}
-});
 
-router.get('/retrive', function(req, res) {
-	db.retriveUser(function(err, users) {
-		if (err) {
-			res.end(err.toString())
-		}
-		else {
-			res.render('user-retrive', {users: users})
-		}
-	})
-});
-
-router.get('/update', function(req, res) {
-	res.render('user-update');
-});
-
-router.post('/update', function(req, res) {
-	var form = check(req.body)
-	var _id = form._id
-	var user = (delete form._id, form)
-
-	db.updateUser(_id, user, function(err, count) {
-		if (err) {
-			res.end(err.toString())
-		}
-		else {
-			res.render('user-update', {count: count})
-		}
-	})
-
-	function check(form) {
-		// TODO
-		return form
+	function createCb(err, _id) {
+		res.render('crud', {
+			target: target,
+			action: action,
+			targetDef: loadDef(target),
+			result: {
+				err: err,
+				_id: _id
+			}
+		})
 	}
-})
 
-router.get('/delete', function(req, res) {
-	res.render('user-delete');
-});
+	function retriveCb(err, list) {
+		res.render('crud', {
+			target: target,
+			action: action,
+			targetDef: loadDef(target),
+			result: {
+				err: err,
+				list: list
+			}
+		})
+	}
 
-router.post('/delete', function(req, res) {
-	var _id = check(req.body._id)
+	function updateCb(err, count) {
+		res.render('crud', {
+			target: target,
+			action: action,
+			targetDef: loadDef(target),
+			result: {
+				err: err,
+				count: count
+			}
+		})
+	}
 
-	db.deleteUser(_id, function(err, count) {
-		if (err) {
-			res.end(err.toString())
-		}
-		else {
-			res.render('user-delete', {count: count})
-		}
-	})
-
-	function check(_id) {
-		// TODO
-		return _id
+	function deleteCb(err, count) {
+		res.render('crud', {
+			target: target,
+			action: action,
+			targetDef: loadDef(target),
+			result: {
+				err: err,
+				count: count
+			}
+		})
 	}
 })
 

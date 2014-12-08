@@ -410,3 +410,108 @@ exports.updateUser = function updateUser(_id, user, cb) {
 		return user
 	}
 }
+
+
+// # cb(err, _id)
+exports.create = function create(collectionName, item, cb) {
+	cb = cb || _cb
+	
+	log('[create] start')
+	log('[create] collectionName=' + collectionName)
+	log('[create] item=' + jsonstr(item))
+
+	var _id = undefined
+	insertDbOnce(collectionName, item, condition(insertDbOnceSuccess, insertDbOnceFailure, insertDbOnceFinally))
+
+	function insertDbOnceSuccess(err, result) {
+		_id = result.ops[0]._id
+		log('[create] success, _id=' + _id)
+	}
+
+	function insertDbOnceFailure(err, result) {
+		// nothing to do
+	}
+
+	function insertDbOnceFinally(err, result) {
+		log('[create] end')
+		cb(err, _id)
+	}
+}
+
+// # cb(err, list)
+exports.retrive = function retrive(collectionName, cb) {
+
+	cb = cb || _cb
+
+	log('[retrive] start')
+	log('[retrive] collectionName=' + collectionName)
+
+	retriveDbListOnce(collectionName, undefined, undefined, condition(retriveDbListOnceSuccess, retriveDbListOnceFailure, retriveDbListOnceFinally))
+
+	function retriveDbListOnceSuccess(err, list) {
+		// nothing to do
+	}
+
+	function retriveDbListOnceFailure(err, list) {
+		// nothing to do
+	}
+
+	function retriveDbListOnceFinally(err, list) {
+		log('[retrive] end')
+		cb(err, list)
+	}
+
+}
+
+// # cb(err, count)
+exports.update = function update(collectionName, _id, item, cb) {
+	cb = cb || _cb
+	
+	log('[update] start')
+	log('[update] collectionName=' + collectionName)	
+	log('[update] _id=' + _id)
+	log('[update] item=' + jsonstr(item))
+
+	var count = undefined
+	updateDbOnce(collectionName, {_id: new mongodb.ObjectID(_id)}, item, undefined, condition(updateDbOnceSuccess, updateDbOnceFailure, updateDbOnceFinally))
+
+	function updateDbOnceSuccess(err, result) {
+		count = result.n
+		log('[update] success, count=' + count)
+	}
+
+	function updateDbOnceFailure(err, result) {
+		// nothing to do
+	}
+
+	function updateDbOnceFinally(err, result) {
+		log('[update] end')
+		cb(err, count)
+	}
+}
+
+// # cb(err, count)
+exports.delete_ = function delete_(collectionName, _id, cb) {
+	cb = cb || _cb
+
+	log('[delete] start')
+	log('[delete] collectionName=' + collectionName)
+	log('[delete] _id=' + _id)
+
+	var count = undefined
+	deleteDbOnce(collectionName, {_id: new mongodb.ObjectID(_id)}, condition(deleteDbOnceSuccess, deleteDbOnceFailure, deleteDbOnceFinally))
+
+	function deleteDbOnceSuccess(err, result) {
+		count = result.n
+		log('[delete] success, count=' + count)
+	}
+
+	function deleteDbOnceFailure(err, result) {
+		// nothing to do
+	}
+
+	function deleteDbOnceFinally(err, result) {
+		log('[delete] end')
+		cb(err, count)
+	}
+}

@@ -19,14 +19,52 @@ block test-content
 		.panel-body
 			form(action=action,method='post')
 				form
-					each item in formDef
-						.form-group
-							label= item
-							input.form-control(type='text',name=item)
-					button.btn.btn-default(type='submit') Submit
+					case action
+						when 'create'
+							each def in targetDef
+								.form-group
+									label= def
+									input.form-control(type='text',name=def)
+							button.btn.btn-default(type='submit') Submit
+						when 'retrive'
+							button.btn.btn-default(type='submit') Submit
+						when 'update'
+							.form-group
+								label _id
+								input.form-control(type='text', name='_id')
+							each def in targetDef
+								.form-group
+									label= def
+									input.form-control(type='text',name=def)
+							button.btn.btn-default(type='submit') Submit
+						when 'delete'
+							.form-group
+								label _id
+								input.form-control(type='text', name='_id')
+							button.btn.btn-default(type='submit') Submit
 
 	.panel.panel-default
 		.panel-heading
 			.panel-title output
 		.panel-body
-			p= _id
+			case action
+				when 'create'
+					p= result._id
+				when 'retrive'
+					if result.list
+						ul
+							each item in result.list
+								li
+									strong _id
+									| :
+									span= item._id
+									br
+									each def in targetDef
+										strong= def
+										| :
+										span= item[def]
+										br
+				when 'update'
+					p= result.count
+				when 'delete'
+					p= result.count
